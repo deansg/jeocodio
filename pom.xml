@@ -8,9 +8,29 @@
     <artifactId>jeocodio</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
-    <name>jeocodio</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>A Java wrapper for the Geocodio API</description>
     <url>https://github.com/deansg/jeocodio</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Dean Gurvitz</name>
+            <email>deansg@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/deansg/jeocodio.git</connection>
+        <developerConnection>scm:git:ssh://github.com:deansg/jeocodio.git</developerConnection>
+        <url>https://github.com/deansg/jeocodio/tree/master</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
