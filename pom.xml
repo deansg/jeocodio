@@ -8,6 +8,10 @@
     <artifactId>jeocodio</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
+    <name>jeocodio</name>
+    <description>A Java wrapper for the Geocodio API</description>
+    <url>https://github.com/deansg/jeocodio</url>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
