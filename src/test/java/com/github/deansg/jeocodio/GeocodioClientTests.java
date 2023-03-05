@@ -94,7 +94,7 @@ public class GeocodioClientTests {
         when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
         var geocodingRequest = GeocodingRequestBuilder.builder()
                 .q(inputQ)
-                .fields(Arrays.asList("cd", "state"))
+                .fields(inputFields)
                 .build();
 
         var future = geocodioClient.geocodeAsync(geocodingRequest);
