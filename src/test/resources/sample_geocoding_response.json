@@ -1,0 +1,40 @@
+{
+  "input": {
+    "address_components": {
+      "number": "1109",
+      "predirectional": "N",
+      "street": "Highland",
+      "suffix": "St",
+      "formatted_street": "N Highland St",
+      "city": "Arlington",
+      "state": "VA",
+      "zip": "22201",
+      "country": "US"
+    },
+    "formatted_address": "1109 N Highland St, Arlington, VA 22201"
+  },
+  "results": [
+    {
+      "address_components": {
+        "number": "1109",
+        "predirectional": "N",
+        "street": "Highland",
+        "suffix": "St",
+        "formatted_street": "N Highland St",
+        "city": "Arlington",
+        "county": "Arlington County",
+        "state": "VA",
+        "zip": "22201",
+        "country": "US"
+      },
+      "formatted_address": "1109 N Highland St, Arlington, VA 22201",
+      "location": {
+        "lat": 38.886665,
+        "lng": -77.094733
+      },
+      "accuracy": 1,
+      "accuracy_type": "rooftop",
+      "source": "Virginia GIS Clearinghouse"
+    }
+  ]
+}

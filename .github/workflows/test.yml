@@ -12,5 +12,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Test with Maven
-        run: mvn test
+      - name: Build with Maven
+        run: mvn -B test
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          fail-if-branches-less-than: 0.1
