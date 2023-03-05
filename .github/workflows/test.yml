@@ -12,11 +12,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Test with Maven & output code coverage
-        run: mvn cobertura:cobertura
-      - name: Code Coverage Summary Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
+      - name: Build with Maven
+        run: mvn -B test
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
         with:
-          filename: coverage.cobertura.xml
-          badge: true
-          fail_below_min: true
+          generate-branches-badge: true
+          fail-if-branches-less-than: 0.8
