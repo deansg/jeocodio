@@ -1,0 +1,48 @@
+{
+  "results": [
+    {
+      "address_components": {
+        "number": "508",
+        "street": "H",
+        "suffix": "St",
+        "postdirectional": "NE",
+        "formatted_street": "H St NE",
+        "city": "Washington",
+        "county": "District of Columbia",
+        "state": "DC",
+        "zip": "20002",
+        "country": "US"
+      },
+      "formatted_address": "508 H St NE, Washington, DC 20002",
+      "location": {
+        "lat": 38.900432,
+        "lng": -76.999031
+      },
+      "accuracy": 1,
+      "accuracy_type": "rooftop",
+      "source": "City of Washington"
+    },
+    {
+      "address_components": {
+        "number": "510",
+        "street": "H",
+        "suffix": "St",
+        "postdirectional": "NE",
+        "formatted_street": "H St NE",
+        "city": "Washington",
+        "county": "District of Columbia",
+        "state": "DC",
+        "zip": "20002",
+        "country": "US"
+      },
+      "formatted_address": "510 H St NE, Washington, DC 20002",
+      "location": {
+        "lat": 38.900429,
+        "lng": -76.998965
+      },
+      "accuracy": 0.9,
+      "accuracy_type": "rooftop",
+      "source": "City of Washington"
+    }
+  ]
+}
