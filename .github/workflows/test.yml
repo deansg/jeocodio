@@ -12,5 +12,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Test with Maven
-        run: mvn test
+      - name: Test with Maven & output code coverage
+        run: mvn cobertura:cobertura
+      - name: Code Coverage Summary Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.cobertura.xml
+          badge: true
+          fail_below_min: true
