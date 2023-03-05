@@ -2,7 +2,7 @@
 
 🌐 A Java wrapper for the Geocodio API
 
-| Badge Name                   | Badge                                    |
-|------------------------------|------------------------------------------|
-| **Jacoco test coverage**     | ![Coverage](.github/badges/jacoco.svg)   |
-| **Jacoco branches coverage** | ![Coverage](.github/badges/branches.svg) |
+| __Tests status__             | ![Build Status](https://github.com/deansg/jeocodio/actions/workflows/test.yml/badge.svg) |
+|------------------------------|------------------------------------------------------------------------------------------|
+| __Jacoco Test Coverage__     | ![Coverage](.github/badges/jacoco.svg)                                                   |
+| __Jacoco Branches Coverage__ | ![Branches](.github/badges/branches.svg)                                                 |
