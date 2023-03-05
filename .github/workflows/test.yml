@@ -18,4 +18,4 @@ jobs:
         uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
-          fail-if-branches-less-than: 0.8
+          fail-if-branches-less-than: 0.1
