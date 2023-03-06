@@ -1,9 +1,6 @@
 package com.github.deansg.jeocodio;
 
-import com.github.deansg.jeocodio.models.GeocodingRequest;
-import com.github.deansg.jeocodio.models.GeocodingRequestBuilder;
-import com.github.deansg.jeocodio.models.GeocodingResponse;
-import com.github.deansg.jeocodio.models.ReverseGeocodingResponse;
+import com.github.deansg.jeocodio.models.*;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,19 +49,24 @@ public class GeocodioClient {
         this.baseUrl = baseUrl;
     }
 
+    /**
+     * Wrapper for {@link #geocodeAsync(GeocodingRequest)} in case you only want to provide the q parameter.
+     * See <a href="https://www.geocod.io/docs/#single-address">this</a> for full documentation
+     * @param q The geocoding query
+     * @return a future of {@link GeocodingResponse}
+     */
     public CompletableFuture<GeocodingResponse> geocodeAsync(String q) {
         return geocodeAsync(GeocodingRequestBuilder.builder().q(q).build());
     }
 
     /**
      * See <a href="https://www.geocod.io/docs/#single-address">this</a> for full documentation
-     * @param request The geocoding request
-     * @return a {@link GeocodingResponse} object
+     * @param request The full geocoding request
+     * @return a future of {@link GeocodingResponse}
      */
     public CompletableFuture<GeocodingResponse> geocodeAsync(GeocodingRequest request) {
-        var query = new HashMap<String, String>();
+        var query = initializeRequestQuery();
         query.put("q", request.q());
-        query.put("api_key", this.apiKey);
         query.put("country", request.country());
         query.put("fields", formatFieldsParam(request.fields()));
         query.put("limit", Optional.ofNullable(request.limit()).map(Object::toString).orElse(null));
@@ -81,9 +83,17 @@ public class GeocodioClient {
         return sendAsync(httpRequest, GeocodingResponse.class);
     }
 
-    public CompletableFuture<ReverseGeocodingResponse> reverseGeocodeAsync(GeocodingRequest request) {
-        var query = new HashMap<String, String>();
-        query.put("api_key", this.apiKey);
+    /**
+     * See <a href="https://www.geocod.io/docs/#reverse-geocoding-single-coordinate">this</a> for full documentation
+     * @param request The reverse geocoding request
+     * @return a future of {@link ReverseGeocodingResponse}
+     */
+    public CompletableFuture<ReverseGeocodingResponse> reverseGeocodeAsync(ReverseGeocodingRequest request) {
+        var query = initializeRequestQuery();
+        query.put("q", String.format("%s,%s", request.latitude(), request.longitude()));
+        query.put("fields", formatFieldsParam(request.fields()));
+        query.put("limit", Optional.ofNullable(request.limit()).map(Object::toString).orElse(null));
+        query.put("format", request.format());
         var uri = buildURI("reverse", query);
         var httpRequest = HttpRequest.newBuilder()
                 .GET()
@@ -99,6 +109,7 @@ public class GeocodioClient {
         return String.join(",", fields);
     }
 
+    // TODO: error handling
     private <T> CompletableFuture<T> sendAsync(HttpRequest httpRequest, Class<T> clazz) {
         return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
@@ -114,5 +125,11 @@ public class GeocodioClient {
                 .collect(Collectors.joining("&"));
         String uriString = String.format("%s%s?%s", this.baseUrl, endpoint, queryString);
         return URI.create(uriString);
+    }
+
+    private Map<String, String> initializeRequestQuery() {
+        var query = new HashMap<String, String>();
+        query.put("api_key", this.apiKey);
+        return query;
     }
 }

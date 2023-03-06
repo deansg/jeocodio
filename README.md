@@ -17,15 +17,23 @@ import com.github.deansg.jeocodio.GeocodioClient;
 import com.github.deansg.jeocodio.models.GeocodingRequest;
 import com.github.deansg.jeocodio.models.GeocodingRequestBuilder;
 import com.github.deansg.jeocodio.models.GeocodingResponse;
+import com.github.deansg.jeocodio.models.ReverseGeocodingResponse;
 
-public class Main {
+public class JeocodioDemo {
     public static void main(String[] args) {
         GeocodioClient client = new GeocodioClient("YOUR_GEOCODIO_API_KEY");
         GeocodingRequest geocodingRequest = GeocodingRequestBuilder.builder()
                 .q("1109 N Highland St. Arlington VA")
                 .fields(Arrays.asList("cd", "state"))
                 .build();
+
+        // Single geocoding request
         GeocodingResponse response = client.geocodeAsync(geocodingRequest).get();
+        System.out.println(response.input().formattedAddress());
+        System.out.println(response.results().get(0).formattedAddress());
+
+        // Single reverse geocoding request
+        ReverseGeocodingResponse response = client.reverseGeocodeAsync(geocodingRequest).get();
         System.out.println(response.results().get(0).formattedAddress());
     }
 }
