@@ -1,7 +1,6 @@
 package com.github.deansg.jeocodio;
 
-import com.github.deansg.jeocodio.models.GeocodingRequestBuilder;
-import com.github.deansg.jeocodio.models.GeocodingResponse;
+import com.github.deansg.jeocodio.models.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,6 +57,7 @@ public class GeocodioClientTests {
         assertEquals(1, response.results().size());
         var result = response.results().get(0);
         assertEquals("1109 N Highland St, Arlington, VA 22201", result.formattedAddress());
+        assertEquals(new Location(38.886665, -77.094733), result.location());
         assertEquals(1.0, result.accuracy());
         assertEquals("rooftop", result.accuracyType());
         assertEquals("N Highland St", result.addressComponents().formattedStreet());
@@ -135,6 +135,61 @@ public class GeocodioClientTests {
         assertEquals("/v1.7/geocode", actualUri.getPath());
         assertEquals(String.format("api_key=%s&fields=%s&q=%s", randomApiKey, String.join(",", fields), encodeUrlComponent(inputQ)),
                 actualUri.getQuery());
+    }
+
+    //endregion
+
+    //region testReverseGeocodeAsyncSanity
+
+    @Test
+    public void testReverseGeocodeAsyncSanity() throws ExecutionException, InterruptedException, IOException {
+        var rawResponse = readSampleReverseGeocodingResponse();
+        double reqLatitude = 38.9002898;
+        double reqLongitude = -76.9990361;
+         var query = ReverseGeocodingRequestBuilder.builder()
+                 .latitude(reqLatitude)
+                 .longitude(reqLongitude)
+                 .build();
+        var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+
+        var future = geocodioClient.reverseGeocodeAsync(query);
+
+        validateReverseGeocodeResponse(future);
+        validateReverseGeocodeRequest(reqLatitude, reqLongitude);
+    }
+
+    private void validateReverseGeocodeResponse(CompletableFuture<ReverseGeocodingResponse> responseFuture) throws ExecutionException, InterruptedException {
+        assertNotNull(responseFuture);
+        var response = responseFuture.get();
+        assertNotNull(response);
+        assertNotNull(response.results());
+        assertEquals(2, response.results().size());
+        var secondResult = response.results().get(1);
+        assertEquals("510 H St NE, Washington, DC 20002", secondResult.formattedAddress());
+        assertEquals(0.9, secondResult.accuracy());
+        assertEquals("rooftop", secondResult.accuracyType());
+        assertEquals("City of Washington", secondResult.source());
+        assertEquals(new Location(38.900429, -76.998965), secondResult.location());
+        assertEquals("H St NE", secondResult.addressComponents().formattedStreet());
+        assertEquals("20002", secondResult.addressComponents().zip());
+        assertNull(secondResult.fields());
+    }
+
+    private void validateReverseGeocodeRequest(double lat, double lon) {
+        var argumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(httpClient).sendAsync(argumentCaptor.capture(), any());
+        var actualRequest = argumentCaptor.getValue();
+        assertEquals("GET", actualRequest.method());
+        var actualUri = actualRequest.uri();
+        assertEquals(EXPECTED_DEFAULT_BASE_URL_SCHEME, actualUri.getScheme());
+        assertEquals(EXPECTED_DEFAULT_BASE_URL_HOST, actualUri.getHost());
+        assertEquals("/v1.7/reverse", actualUri.getPath());
+        assertEquals(String.format("api_key=%s&q=%s,%s", randomApiKey, lat, lon), actualUri.getQuery());
+    }
+
+    private String readSampleReverseGeocodingResponse() throws IOException {
+        return TestUtils.readResource("sample_reverse_geocoding_response.json");
     }
 
     //endregion
