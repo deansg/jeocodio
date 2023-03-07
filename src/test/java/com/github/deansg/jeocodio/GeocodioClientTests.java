@@ -139,6 +139,57 @@ public class GeocodioClientTests {
 
     //endregion
 
+    //region testBatchGeocodeAsyncSanity
+
+    @Test
+    public void testBatchGeocodeAsyncSanity() throws ExecutionException, InterruptedException, IOException {
+        var rawResponse = readSampleBatchGeocodingResponse();
+        var request = BatchGeocodingRequestBuilder.builder()
+                .qs(List.of("1109 N Highland St, Arlington VA", "525 University Ave, Toronto, ON, Canada"))
+                .build();
+        var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+
+        var future = geocodioClient.batchGeocodeAsync(request);
+
+        validateBatchGeocodeResponse(future);
+        validateBatchGeocodeRequest();
+    }
+
+    private void validateBatchGeocodeResponse(CompletableFuture<BatchGeocodingResponse> responseFuture) throws ExecutionException, InterruptedException {
+        assertNotNull(responseFuture);
+        var response = responseFuture.get();
+        assertNotNull(response);
+        assertNotNull(response.results());
+        assertEquals(2, response.results().size());
+        var result = response.results().get(0);
+        assertEquals("1109 N Highland St, Arlington VA", result.query());
+        var innerResponse =result.response();
+        assertNotNull(innerResponse);
+        assertNotNull(innerResponse.input());
+        assertNotNull(innerResponse.results());
+        assertEquals(2, innerResponse.results().size());
+    }
+
+    private void validateBatchGeocodeRequest() {
+        var argumentCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(httpClient).sendAsync(argumentCaptor.capture(), any());
+        var actualRequest = argumentCaptor.getValue();
+        assertEquals("POST", actualRequest.method());
+        var actualUri = actualRequest.uri();
+        assertEquals(EXPECTED_DEFAULT_BASE_URL_SCHEME, actualUri.getScheme());
+        assertEquals(EXPECTED_DEFAULT_BASE_URL_HOST, actualUri.getHost());
+        assertEquals("/v1.7/geocode", actualUri.getPath());
+        assertEquals(String.format("api_key=%s", randomApiKey), actualUri.getQuery());
+        assertEquals(Map.of("Content-Type", List.of("application/json")), actualRequest.headers().map());
+    }
+
+    private String readSampleBatchGeocodingResponse() throws IOException {
+        return TestUtils.readResource("sample_batch_geocoding_response.json");
+    }
+
+    //endregion
+
     //region testReverseGeocodeAsyncSanity
 
     @Test
@@ -199,6 +250,7 @@ public class GeocodioClientTests {
     private <T> HttpResponse<T> mockHttpResponse(T content) {
         @SuppressWarnings("unchecked")
         HttpResponse<T> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.body()).thenReturn(content);
         return mockResponse;
     }
