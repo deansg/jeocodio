@@ -22,6 +22,8 @@ public class GeocodioClient {
     private final Gson gson;
     private final String baseUrl;
 
+    //region Constructors
+
     /**
      * Creates a new GeocodioClient with a default {@link HttpClient} & base Geocodio URL
      * @param apiKey The Geocodio API key
@@ -48,6 +50,8 @@ public class GeocodioClient {
         this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
         this.baseUrl = baseUrl;
     }
+
+    //endregion
 
     /**
      * Wrapper for {@link #geocodeAsync(GeocodingRequest)} in case you only want to provide the q parameter.
@@ -84,6 +88,24 @@ public class GeocodioClient {
     }
 
     /**
+     * See <a href="https://www.geocod.io/docs/#batch-geocoding">this</a> for full documentation
+     * @param request The full geocoding request
+     * @return a future of {@link BatchGeocodingResponse}
+     */
+    public CompletableFuture<BatchGeocodingResponse> batchGeocodeAsync(BatchGeocodingRequest request) {
+        var query = initializeRequestQuery();
+        query.put("fields", formatFieldsParam(request.fields()));
+        query.put("limit", Optional.ofNullable(request.limit()).map(Object::toString).orElse(null));
+        var uri = buildURI("geocode", query);
+        var httpRequest = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(this.gson.toJson(request.qs())))
+                .header("Content-Type", "application/json")
+                .uri(uri)
+                .build();
+        return sendAsync(httpRequest, BatchGeocodingResponse.class);
+    }
+
+    /**
      * See <a href="https://www.geocod.io/docs/#reverse-geocoding-single-coordinate">this</a> for full documentation
      * @param request The reverse geocoding request
      * @return a future of {@link ReverseGeocodingResponse}
@@ -109,10 +131,15 @@ public class GeocodioClient {
         return String.join(",", fields);
     }
 
-    // TODO: error handling
     private <T> CompletableFuture<T> sendAsync(HttpRequest httpRequest, Class<T> clazz) {
         return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenApply(HttpResponse::body)
+                .thenApply(resp -> {
+                    var body = resp.body();
+                    if (resp.statusCode() != 200) {
+                        throw new GeocodioStatusCodeException(resp.statusCode(), body);
+                    }
+                    return body;
+                })
                 .thenApply(str -> this.gson.fromJson(str, clazz));
     }
 
