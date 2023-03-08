@@ -139,6 +139,22 @@ public class GeocodioClientTests {
 
     //endregion
 
+    @Test
+    public void testBadStatusCode() {
+        int statusCode = 422;
+        String errorMessage = "Invalid request!";
+        var rawResponse = mockHttpResponse(statusCode, errorMessage);
+        var mockFuture = CompletableFuture.completedFuture(rawResponse);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+
+        var future = geocodioClient.geocodeAsync("");
+
+        var exception = assertThrows(ExecutionException.class, future::get);
+        var innerException = assertInstanceOf(GeocodioStatusCodeException.class, exception.getCause());
+        assertEquals(statusCode, innerException.statusCode());
+        assertEquals(errorMessage, innerException.responseBody());
+    }
+
     //region testBatchGeocodeAsyncSanity
 
     @Test
@@ -248,9 +264,13 @@ public class GeocodioClientTests {
     //region Utils
 
     private <T> HttpResponse<T> mockHttpResponse(T content) {
+        return mockHttpResponse(200, content);
+    }
+
+    private <T> HttpResponse<T> mockHttpResponse(int statusCode, T content) {
         @SuppressWarnings("unchecked")
         HttpResponse<T> mockResponse = mock(HttpResponse.class);
-        when(mockResponse.statusCode()).thenReturn(200);
+        when(mockResponse.statusCode()).thenReturn(statusCode);
         when(mockResponse.body()).thenReturn(content);
         return mockResponse;
     }

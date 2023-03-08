@@ -10,31 +10,51 @@
 
 ## How to Use
 
-Basic example:
-
 ```java
 import com.github.deansg.jeocodio.GeocodioClient;
-import com.github.deansg.jeocodio.models.GeocodingRequest;
-import com.github.deansg.jeocodio.models.GeocodingRequestBuilder;
-import com.github.deansg.jeocodio.models.GeocodingResponse;
-import com.github.deansg.jeocodio.models.ReverseGeocodingResponse;
+import com.github.deansg.jeocodio.GeocodioStatusCodeException;
+import com.github.deansg.jeocodio.models.*;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class JeocodioDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         GeocodioClient client = new GeocodioClient("YOUR_GEOCODIO_API_KEY");
+
+        // Single geocoding request
         GeocodingRequest geocodingRequest = GeocodingRequestBuilder.builder()
                 .q("1109 N Highland St. Arlington VA")
                 .fields(Arrays.asList("cd", "state"))
                 .build();
-
-        // Single geocoding request
         GeocodingResponse response = client.geocodeAsync(geocodingRequest).get();
         System.out.println(response.input().formattedAddress());
         System.out.println(response.results().get(0).formattedAddress());
 
+        // Batch geocoding request
+        BatchGeocodingRequest batchGeocodingRequest = BatchGeocodingRequestBuilder.builder()
+                .qs(List.of("1109 N Highland St, Arlington VA", "525 University Ave, Toronto, ON, Canada"))
+                .build();
+        BatchGeocodingResponse batchGeocodingResponse = client.batchGeocodeAsync(batchGeocodingRequest).get();
+        System.out.println(batchGeocodingResponse.results().get(0).query());
+
         // Single reverse geocoding request
-        ReverseGeocodingResponse response = client.reverseGeocodeAsync(geocodingRequest).get();
-        System.out.println(response.results().get(0).formattedAddress());
+        ReverseGeocodingRequest reverseGeocodingRequest = ReverseGeocodingRequestBuilder.builder()
+                .latitude(38.9002898)
+                .longitude(-76.9990361)
+                .build();
+        ReverseGeocodingResponse reverseGeocodingResponse = client.reverseGeocodeAsync(geocodingRequest).get();
+        System.out.println(reverseGeocodingResponse.results().get(0).formattedAddress());
+
+        // Error handling
+        try {
+            client.geocodeAsync("").get();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof GeocodioStatusCodeException statusCodeException) {
+                System.out.println(statusCodeException.statusCode());
+                System.out.println(statusCodeException.responseBody());
+            }
+        }
     }
 }
 ```
