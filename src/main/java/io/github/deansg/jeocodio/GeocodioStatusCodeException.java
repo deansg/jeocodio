@@ -1,4 +1,4 @@
-package com.github.deansg.jeocodio;
+package io.github.deansg.jeocodio;
 
 public class GeocodioStatusCodeException extends RuntimeException {
     private final int statusCode;

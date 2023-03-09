@@ -1,4 +1,4 @@
-package com.github.deansg.jeocodio;
+package io.github.deansg.jeocodio;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

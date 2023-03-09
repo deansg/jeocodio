@@ -16,9 +16,9 @@ and [RecordBuilder](https://github.com/Randgalt/record-builder) as dependencies.
 Here are some basic code examples:
 
 ```java
-import com.github.deansg.jeocodio.GeocodioClient;
-import com.github.deansg.jeocodio.GeocodioStatusCodeException;
-import com.github.deansg.jeocodio.models.*;
+import io.github.deansg.jeocodio.GeocodioClient;
+import io.github.deansg.jeocodio.GeocodioStatusCodeException;
+import io.github.deansg.jeocodio.models.*;
 
 import java.net.http.HttpClient;
 import java.util.List;
@@ -28,7 +28,7 @@ public class JeocodioDemo {
     public static void main(String[] args) throws Exception {
         // Basic client creation
         GeocodioClient client = new GeocodioClient("YOUR_GEOCODIO_API_KEY");
-        
+
         // Single geocoding request
         GeocodingRequest geocodingRequest = GeocodingRequestBuilder.builder()
                 .q("1109 N Highland St. Arlington VA")
@@ -52,10 +52,10 @@ public class JeocodioDemo {
                 .build();
         ReverseGeocodingResponse reverseGeocodingResponse = client.reverseGeocodeAsync(geocodingRequest).get();
         System.out.println(reverseGeocodingResponse.results().get(0).formattedAddress());
-        
+
         // Using a custom java.net.http.HttpClient instance
         client = new GeocodioClient(HttpClient.newBuilder().build(), "YOUR_GEOCODIO_API_KEY");
-        
+
         // Error handling
         try {
             client.geocodeAsync("").get();
