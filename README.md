@@ -13,7 +13,19 @@
 Jeocodio requires Java 17 and above. It is aimed to be a lightweight library and only includes [Gson](https://github.com/google/gson)
 and [RecordBuilder](https://github.com/Randgalt/record-builder) as dependencies.
 
-Here are some basic code examples:
+### Download (coming soon)
+
+Can be downloaded through Maven, by adding the following dependency:
+
+```xml
+<dependency>
+  <groupId>io.github.deansg</groupId>
+  <artifactId>jeocodio</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+### Code examples
 
 ```java
 import io.github.deansg.jeocodio.GeocodioClient;
@@ -68,3 +80,13 @@ public class JeocodioDemo {
     }
 }
 ```
+
+## TODOs
+
+* Add support for more forms of batch geocoding
+* Add batch reverse geocoding
+* Add non-async variants for all methods
+
+## Other notes
+
+* Since this library still didn't reach version 1.0.0, the rules of [Semantic Versioning](https://semver.org/) aren't yet followed in full
