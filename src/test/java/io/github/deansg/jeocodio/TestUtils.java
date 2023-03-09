@@ -1,4 +1,4 @@
-package com.github.deansg.jeocodio;
+package io.github.deansg.jeocodio;
 
 import java.io.IOException;
 import java.nio.file.Files;

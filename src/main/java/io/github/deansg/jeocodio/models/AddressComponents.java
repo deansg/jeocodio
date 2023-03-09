@@ -1,4 +1,4 @@
-package com.github.deansg.jeocodio.models;
+package io.github.deansg.jeocodio.models;
 
 public record AddressComponents(String number,
                                 String predirectional,

@@ -1,4 +1,4 @@
-package com.github.deansg.jeocodio.models;
+package io.github.deansg.jeocodio.models;
 
 import java.util.Map;
 

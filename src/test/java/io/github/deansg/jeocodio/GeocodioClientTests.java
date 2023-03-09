@@ -1,6 +1,7 @@
-package com.github.deansg.jeocodio;
+package io.github.deansg.jeocodio;
 
-import com.github.deansg.jeocodio.models.*;
+import io.github.deansg.jeocodio.models.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -57,7 +58,7 @@ public class GeocodioClientTests {
         assertEquals(1, response.results().size());
         var result = response.results().get(0);
         assertEquals("1109 N Highland St, Arlington, VA 22201", result.formattedAddress());
-        assertEquals(new Location(38.886665, -77.094733), result.location());
+        Assertions.assertEquals(new Location(38.886665, -77.094733), result.location());
         assertEquals(1.0, result.accuracy());
         assertEquals("rooftop", result.accuracyType());
         assertEquals("N Highland St", result.addressComponents().formattedStreet());

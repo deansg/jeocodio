@@ -1,9 +1,9 @@
-package com.github.deansg.jeocodio;
+package io.github.deansg.jeocodio;
 
-import com.github.deansg.jeocodio.models.*;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.github.deansg.jeocodio.models.*;
 
 import java.net.URI;
 import java.net.URLEncoder;
