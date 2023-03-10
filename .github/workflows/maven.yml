@@ -3,6 +3,8 @@
 
 name: maven-release
 
+run-name: ${{ github.actor }} is publishing to Maven central
+
 on:
   workflow_run:
     workflows: [ "test" ]
