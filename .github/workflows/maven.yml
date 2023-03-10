@@ -8,7 +8,7 @@ run-name: ${{ github.actor }} is publishing to Maven central
 on:
   workflow_run:
     workflows: [ "test" ]
-    branches: [ master ]
+    branches: [ releases/* ]
     types:
       - completed
 
