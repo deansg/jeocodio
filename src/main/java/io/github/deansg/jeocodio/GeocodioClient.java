@@ -25,7 +25,7 @@ public class GeocodioClient {
     //region Constructors
 
     /**
-     * Creates a new GeocodioClient with a default {@link HttpClient} & base Geocodio URL
+     * Creates a new GeocodioClient with a default {@link HttpClient} and base Geocodio URL
      * @param apiKey The Geocodio API key
      */
     public GeocodioClient(String apiKey) {
@@ -33,7 +33,7 @@ public class GeocodioClient {
     }
 
     /**
-     * Creates a new GeocodioClient with the provided {@link HttpClient} & the default base Geocodio URL
+     * Creates a new GeocodioClient with the provided {@link HttpClient} and the default base Geocodio URL
      * @param apiKey The Geocodio API key
      */
     public GeocodioClient(HttpClient httpClient, String apiKey) {
