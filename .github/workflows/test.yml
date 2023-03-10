@@ -1,6 +1,6 @@
 name: test
 run-name: ${{ github.actor }} is running tests
-on: [ push, pull_request ]
+on: [ push ]
 jobs:
   build:
     runs-on: ubuntu-latest
