@@ -2,26 +2,28 @@
 
 ### 🌐 A Java wrapper for the Geocodio API
 
-|                              |                                                                                                                    |
-|------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| __License__                  | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) |
-| __Tests status__             | ![Build Status](https://github.com/deansg/jeocodio/actions/workflows/test.yml/badge.svg)                           |
-| __Test Coverage__            | ![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg)                                    |
+|                    |                                                                                                                                                                                      |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| __License__        | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)                                                                   |
+| __Tests status__   | ![Build Status](https://github.com/deansg/jeocodio/actions/workflows/test.yml/badge.svg)                                                                                             |
+| __Test Coverage__  | ![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg)                                                                                                      |
+| __Latest Release__ | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.deansg/jeocodio/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.deansg/jeocodio) |
 
 ## How to Use
 
-Jeocodio requires Java 17 and above. It is aimed to be a lightweight library and only includes [Gson](https://github.com/google/gson)
-and [RecordBuilder](https://github.com/Randgalt/record-builder) as dependencies.
+Jeocodio requires Java 17 and above. It is aimed to be a lightweight library and only includes
+[Gson](https://github.com/google/gson) and [RecordBuilder](https://github.com/Randgalt/record-builder) as dependencies.
 
 ### Download
 
 Can be downloaded through Maven, by adding the following dependency:
 
 ```xml
+
 <dependency>
-  <groupId>io.github.deansg</groupId>
-  <artifactId>jeocodio</artifactId>
-  <version>0.1.0</version>
+    <groupId>io.github.deansg</groupId>
+    <artifactId>jeocodio</artifactId>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -89,4 +91,5 @@ public class JeocodioDemo {
 
 ## Other notes
 
-* Since this library still didn't reach version 1.0.0, the rules of [Semantic Versioning](https://semver.org/) might not yet be followed in full
+* Since this library still didn't reach version 1.0.0, the rules of [Semantic Versioning](https://semver.org/) might not
+  yet be followed in full
