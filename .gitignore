@@ -16,6 +16,10 @@
 *.iml
 *.ipr
 
+# Sonarlint
+.idea/sonarlint
+.idea/sonarlint.xml
+
 target/
 pom.xml.tag
 pom.xml.releaseBackup
