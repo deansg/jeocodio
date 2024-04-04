@@ -35,13 +35,14 @@ public class IntegrationTest {
     @Disabled("Should be used for local testing with a real API key as an environment variable")
     @Test
     public void testGeocodingE2EWarnings() throws ExecutionException, InterruptedException {
-        // test warnings
         var geocodingRequest = GeocodingRequestBuilder.builder()
                 .q("Road X, Hot Springs, AR")
                 .fields(List.of("acs-social"))
                 .limit(1)
                 .build();
+
         var result = geocodioClient.geocodeAsync(geocodingRequest).get();
+
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.results().size());
         Assertions.assertEquals(List.of("acs-social was skipped since result is not street-level"), result.results().get(0).warnings());
