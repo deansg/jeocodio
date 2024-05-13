@@ -6,9 +6,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import javax.imageio.IIOException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +36,14 @@ public class GeocodioClientTests {
     public void setUp() {
         randomApiKey = UUID.randomUUID().toString();
         httpClient = mock(HttpClient.class);
-        geocodioClient = new GeocodioClient(httpClient, randomApiKey);
+        geocodioClient = new GeocodioClient(httpClient, randomApiKey,
+                GeocodioClientOptionsBuilder.builder().gzip(false).build());
+    }
+
+    @Test
+    public void testConstructors() {
+        geocodioClient = new GeocodioClient(randomApiKey);
+        geocodioClient = new GeocodioClient(randomApiKey, new GeocodioClientOptions(null, null));
     }
 
     //region testGeocodeAsyncSanity
@@ -41,7 +53,7 @@ public class GeocodioClientTests {
         var rawResponse = readSampleGeocodingResponse();
         var inputQ = "1109 N Highland St. Arlington VA";
         var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
-        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
 
         var future = geocodioClient.geocodeAsync(inputQ);
 
@@ -58,7 +70,7 @@ public class GeocodioClientTests {
         assertEquals(1, response.results().size());
         var result = response.results().get(0);
         assertEquals("1109 N Highland St, Arlington, VA 22201", result.formattedAddress());
-        Assertions.assertEquals(new Location(38.886665, -77.094733), result.location());
+        Assertions.assertEquals(new Location(38.886672, -77.094735), result.location());
         assertEquals(1.0, result.accuracy());
         assertEquals("rooftop", result.accuracyType());
         assertEquals("N Highland St", result.addressComponents().formattedStreet());
@@ -78,8 +90,8 @@ public class GeocodioClientTests {
         assertEquals(String.format("api_key=%s&q=%s", randomApiKey, encodeUrlComponent(inputQ)), actualUri.getQuery());
     }
 
-    private String readSampleGeocodingResponse() throws IOException {
-        return TestUtils.readResource("sample_geocoding_response.json");
+    private InputStream readSampleGeocodingResponse() throws IOException {
+        return new ByteArrayInputStream(TestUtils.readResource("sample_geocoding_response.json"));
     }
 
     //endregion
@@ -92,7 +104,7 @@ public class GeocodioClientTests {
         var inputQ = "1109 N Highland St. Arlington VA";
         var inputFields = Arrays.asList("cd", "state");
         var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
-        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
         var geocodingRequest = GeocodingRequestBuilder.builder()
                 .q(inputQ)
                 .fields(inputFields)
@@ -140,13 +152,38 @@ public class GeocodioClientTests {
 
     //endregion
 
+    //region testGeocodeAsyncGZIP
+
+    @Test
+    public void testGeocodeAsyncGZIP() throws ExecutionException, InterruptedException, IOException {
+        var rawResponse = readSampleGZIPGeocodingResponse();
+        var inputQ = "1109 N Highland St. Arlington VA";
+        var mockResponse = mockHttpResponse(rawResponse);
+        when(mockResponse.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Encoding", List.of("gzip")),
+                (s1, s2) -> true));
+        var mockFuture = CompletableFuture.completedFuture(mockResponse);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
+        geocodioClient = new GeocodioClient(httpClient, randomApiKey);
+
+        var future = geocodioClient.geocodeAsync(inputQ);
+
+        validateGeocodeResponse(future);
+        validateGeocodeRequest(inputQ);
+    }
+
+    private InputStream readSampleGZIPGeocodingResponse() throws IOException {
+        return new ByteArrayInputStream(TestUtils.readResource("sample_geocoding_response.gzip"));
+    }
+
+    //endregion
+
     @Test
     public void testBadStatusCode() {
         int statusCode = 422;
         String errorMessage = "Invalid request!";
-        var rawResponse = mockHttpResponse(statusCode, errorMessage);
+        HttpResponse<InputStream> rawResponse = mockHttpResponse(statusCode, new ByteArrayInputStream(errorMessage.getBytes()));
         var mockFuture = CompletableFuture.completedFuture(rawResponse);
-        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
 
         var future = geocodioClient.geocodeAsync("");
 
@@ -165,7 +202,7 @@ public class GeocodioClientTests {
                 .qs(List.of("1109 N Highland St, Arlington VA", "525 University Ave, Toronto, ON, Canada"))
                 .build();
         var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
-        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
 
         var future = geocodioClient.batchGeocodeAsync(request);
 
@@ -181,7 +218,7 @@ public class GeocodioClientTests {
         assertEquals(2, response.results().size());
         var result = response.results().get(0);
         assertEquals("1109 N Highland St, Arlington VA", result.query());
-        var innerResponse =result.response();
+        var innerResponse = result.response();
         assertNotNull(innerResponse);
         assertNotNull(innerResponse.input());
         assertNotNull(innerResponse.results());
@@ -201,8 +238,8 @@ public class GeocodioClientTests {
         assertEquals(Map.of("Content-Type", List.of("application/json")), actualRequest.headers().map());
     }
 
-    private String readSampleBatchGeocodingResponse() throws IOException {
-        return TestUtils.readResource("sample_batch_geocoding_response.json");
+    private InputStream readSampleBatchGeocodingResponse() throws IOException {
+        return new ByteArrayInputStream(TestUtils.readResource("sample_batch_geocoding_response.json"));
     }
 
     //endregion
@@ -214,12 +251,12 @@ public class GeocodioClientTests {
         var rawResponse = readSampleReverseGeocodingResponse();
         double reqLatitude = 38.9002898;
         double reqLongitude = -76.9990361;
-         var query = ReverseGeocodingRequestBuilder.builder()
-                 .latitude(reqLatitude)
-                 .longitude(reqLongitude)
-                 .build();
+        var query = ReverseGeocodingRequestBuilder.builder()
+                .latitude(reqLatitude)
+                .longitude(reqLongitude)
+                .build();
         var mockFuture = CompletableFuture.completedFuture(mockHttpResponse(rawResponse));
-        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockFuture);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
 
         var future = geocodioClient.reverseGeocodeAsync(query);
 
@@ -256,11 +293,27 @@ public class GeocodioClientTests {
         assertEquals(String.format("api_key=%s&q=%s,%s", randomApiKey, lat, lon), actualUri.getQuery());
     }
 
-    private String readSampleReverseGeocodingResponse() throws IOException {
-        return TestUtils.readResource("sample_reverse_geocoding_response.json");
+    private InputStream readSampleReverseGeocodingResponse() throws IOException {
+        return new ByteArrayInputStream(TestUtils.readResource("sample_reverse_geocoding_response.json"));
     }
 
     //endregion
+
+    @Test
+    public void testIOException() throws IOException {
+        var inputQ = "1109 N Highland St. Arlington VA";
+        var badStream = mock(InputStream.class);
+        when(badStream.readAllBytes()).thenThrow(IIOException.class);
+        HttpResponse<InputStream> mockHTTPResponse = mockHttpResponse(badStream);
+        var mockFuture = CompletableFuture.completedFuture(mockHTTPResponse);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
+
+        var future = geocodioClient.geocodeAsync(inputQ);
+
+        var exception = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(UncheckedIOException.class, exception.getCause());
+    }
+
 
     //region Utils
 
@@ -273,6 +326,7 @@ public class GeocodioClientTests {
         HttpResponse<T> mockResponse = mock(HttpResponse.class);
         when(mockResponse.statusCode()).thenReturn(statusCode);
         when(mockResponse.body()).thenReturn(content);
+        when(mockResponse.headers()).thenReturn(HttpHeaders.of(Collections.emptyMap(), (s1, s2) -> true));
         return mockResponse;
     }
 
@@ -280,8 +334,8 @@ public class GeocodioClientTests {
         return URLEncoder.encode(component, StandardCharsets.UTF_8);
     }
 
-    private String readSampleGeocodingWithFieldsResponse() throws IOException {
-        return TestUtils.readResource("sample_geocoding_with_fields_response.json");
+    private InputStream readSampleGeocodingWithFieldsResponse() throws IOException {
+        return new ByteArrayInputStream(TestUtils.readResource("sample_geocoding_with_fields_response.json"));
     }
 
     //endregion
