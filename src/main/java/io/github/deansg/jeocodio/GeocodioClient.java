@@ -51,7 +51,7 @@ public class GeocodioClient {
      * Creates a new GeocodioClient with the provided {@link HttpClient} and the default client options
      *
      * @param httpClient The HttpClient
-     * @param apiKey The Geocodio API key
+     * @param apiKey     The Geocodio API key
      */
     public GeocodioClient(HttpClient httpClient, String apiKey) {
         this(httpClient, apiKey, DEFAULT_OPTIONS);
@@ -61,8 +61,8 @@ public class GeocodioClient {
      * Creates a new GeocodioClient with the provided {@link HttpClient} and provided client options
      *
      * @param httpClient The HttpClient
-     * @param apiKey The Geocodio API key
-     * @param options The client options
+     * @param apiKey     The Geocodio API key
+     * @param options    The client options
      */
     public GeocodioClient(HttpClient httpClient, String apiKey, GeocodioClientOptions options) {
         this.httpClient = httpClient;
@@ -177,7 +177,12 @@ public class GeocodioClient {
     private InputStream getResponseInputStream(HttpResponse<InputStream> resp) throws IOException {
         var inputStream = resp.body();
         if (resp.headers().firstValue("Content-Encoding").orElse("").equals("gzip")) {
-            inputStream = new GZIPInputStream(inputStream);
+            try {
+                inputStream = new GZIPInputStream(inputStream);
+            } catch (IOException e) {
+                inputStream.close();
+                throw e;
+            }
         }
         return inputStream;
     }
