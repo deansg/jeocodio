@@ -6,7 +6,7 @@
 
     <groupId>io.github.deansg</groupId>
     <artifactId>jeocodio</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A Java wrapper for the Geocodio API</description>

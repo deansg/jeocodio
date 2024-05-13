@@ -23,7 +23,7 @@ Can be downloaded through Maven, by adding the following dependency:
 <dependency>
     <groupId>io.github.deansg</groupId>
     <artifactId>jeocodio</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
