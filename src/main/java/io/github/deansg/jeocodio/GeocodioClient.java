@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.github.deansg.jeocodio.models.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -14,41 +16,59 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 public class GeocodioClient {
-    private static final String DEFAULT_BASE_URL = "https://api.geocod.io/v1.7/";
+    public static final String DEFAULT_BASE_URL = "https://api.geocod.io/v1.7/";
+    private static final GeocodioClientOptions DEFAULT_OPTIONS = new GeocodioClientOptions(true, DEFAULT_BASE_URL);
     private final HttpClient httpClient;
     private final String apiKey;
     private final Gson gson;
-    private final String baseUrl;
+    private final GeocodioClientOptions options;
 
     //region Constructors
 
     /**
-     * Creates a new GeocodioClient with a default {@link HttpClient} and base Geocodio URL
+     * Creates a new GeocodioClient with a default {@link HttpClient} and the default client options
+     *
      * @param apiKey The Geocodio API key
      */
     public GeocodioClient(String apiKey) {
-        this(HttpClient.newHttpClient(), apiKey, DEFAULT_BASE_URL);
+        this(defaultHTTPClient(), apiKey, DEFAULT_OPTIONS);
+    }
+
+    /**
+     * Creates a new GeocodioClient with a default {@link HttpClient} and base Geocodio URL
+     *
+     * @param apiKey The Geocodio API key
+     */
+    public GeocodioClient(String apiKey, GeocodioClientOptions options) {
+        this(defaultHTTPClient(), apiKey, options);
     }
 
     /**
      * Creates a new GeocodioClient with the provided {@link HttpClient} and the default base Geocodio URL
+     *
      * @param apiKey The Geocodio API key
      */
     public GeocodioClient(HttpClient httpClient, String apiKey) {
-        this(httpClient, apiKey, DEFAULT_BASE_URL);
+        this(httpClient, apiKey, DEFAULT_OPTIONS);
     }
 
     /**
      * Creates a new GeocodioClient with the provided {@link HttpClient}, default base Geocodio URL
+     *
      * @param apiKey The Geocodio API key
      */
-    public GeocodioClient(HttpClient httpClient, String apiKey, String baseUrl) {
+    public GeocodioClient(HttpClient httpClient, String apiKey, GeocodioClientOptions options) {
         this.httpClient = httpClient;
         this.apiKey = apiKey;
         this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-        this.baseUrl = baseUrl;
+        this.options = options;
+    }
+
+    private static HttpClient defaultHTTPClient() {
+        return HttpClient.newHttpClient();
     }
 
     //endregion
@@ -56,6 +76,7 @@ public class GeocodioClient {
     /**
      * Wrapper for {@link #geocodeAsync(GeocodingRequest)} in case you only want to provide the q parameter.
      * See <a href="https://www.geocod.io/docs/#single-address">this</a> for full documentation
+     *
      * @param q The geocoding query
      * @return a future of {@link GeocodingResponse}
      */
@@ -65,6 +86,7 @@ public class GeocodioClient {
 
     /**
      * See <a href="https://www.geocod.io/docs/#single-address">this</a> for full documentation
+     *
      * @param request The full geocoding request
      * @return a future of {@link GeocodingResponse}
      */
@@ -80,15 +102,15 @@ public class GeocodioClient {
         query.put("state", request.state());
         query.put("postal_code", request.postalCode());
         var uri = buildURI("geocode", query);
-        var httpRequest = HttpRequest.newBuilder()
+        var httpRequest = buildHTTPRequest(HttpRequest.newBuilder()
                 .GET()
-                .uri(uri)
-                .build();
+                .uri(uri));
         return sendAsync(httpRequest, GeocodingResponse.class);
     }
 
     /**
      * See <a href="https://www.geocod.io/docs/#batch-geocoding">this</a> for full documentation
+     *
      * @param request The full geocoding request
      * @return a future of {@link BatchGeocodingResponse}
      */
@@ -97,16 +119,16 @@ public class GeocodioClient {
         query.put("fields", formatFieldsParam(request.fields()));
         query.put("limit", Optional.ofNullable(request.limit()).map(Object::toString).orElse(null));
         var uri = buildURI("geocode", query);
-        var httpRequest = HttpRequest.newBuilder()
+        var httpRequest = buildHTTPRequest(HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(this.gson.toJson(request.qs())))
                 .header("Content-Type", "application/json")
-                .uri(uri)
-                .build();
+                .uri(uri));
         return sendAsync(httpRequest, BatchGeocodingResponse.class);
     }
 
     /**
      * See <a href="https://www.geocod.io/docs/#reverse-geocoding-single-coordinate">this</a> for full documentation
+     *
      * @param request The reverse geocoding request
      * @return a future of {@link ReverseGeocodingResponse}
      */
@@ -117,10 +139,9 @@ public class GeocodioClient {
         query.put("limit", Optional.ofNullable(request.limit()).map(Object::toString).orElse(null));
         query.put("format", request.format());
         var uri = buildURI("reverse", query);
-        var httpRequest = HttpRequest.newBuilder()
+        var httpRequest = buildHTTPRequest(HttpRequest.newBuilder()
                 .GET()
-                .uri(uri)
-                .build();
+                .uri(uri));
         return sendAsync(httpRequest, ReverseGeocodingResponse.class);
     }
 
@@ -132,15 +153,29 @@ public class GeocodioClient {
     }
 
     private <T> CompletableFuture<T> sendAsync(HttpRequest httpRequest, Class<T> clazz) {
-        return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenApply(resp -> {
-                    var body = resp.body();
-                    if (resp.statusCode() != 200) {
-                        throw new GeocodioStatusCodeException(resp.statusCode(), body);
-                    }
-                    return body;
-                })
+        return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
+                .thenApply(this::readResponse)
                 .thenApply(str -> this.gson.fromJson(str, clazz));
+    }
+
+    private String readResponse(HttpResponse<InputStream> resp) {
+        try (var inputStream = getResponseInputStream(resp)) {
+            String json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            if (resp.statusCode() != 200) {
+                throw new GeocodioStatusCodeException(resp.statusCode(), json);
+            }
+            return json;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private InputStream getResponseInputStream(HttpResponse<InputStream> resp) throws IOException {
+        var inputStream = resp.body();
+        if (resp.headers().firstValue("Content-Encoding").orElse("").equals("gzip")) {
+            inputStream = new GZIPInputStream(inputStream);
+        }
+        return inputStream;
     }
 
     private URI buildURI(String endpoint, Map<String, String> query) {
@@ -150,8 +185,23 @@ public class GeocodioClient {
                 .filter(entry -> entry.getValue() != null)
                 .map(entry -> String.format("%s=%s", entry.getKey(), URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)))
                 .collect(Collectors.joining("&"));
-        String uriString = String.format("%s%s?%s", this.baseUrl, endpoint, queryString);
+        String uriString = String.format("%s%s?%s", baseURL(), endpoint, queryString);
         return URI.create(uriString);
+    }
+
+    private HttpRequest buildHTTPRequest(HttpRequest.Builder builder) {
+        if (Optional.ofNullable(this.options.gzip()).orElse(true)) {
+            builder.header("Accept-Encoding", "gzip");
+        }
+        return builder.build();
+    }
+
+    private String baseURL() {
+        var baseUrl = this.options.BaseURL();
+        if (baseUrl == null) {
+            baseUrl = DEFAULT_BASE_URL;
+        }
+        return baseUrl;
     }
 
     private Map<String, String> initializeRequestQuery() {
