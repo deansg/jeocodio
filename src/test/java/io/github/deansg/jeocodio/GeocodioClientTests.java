@@ -10,6 +10,7 @@ import javax.imageio.IIOException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
@@ -310,8 +311,7 @@ public class GeocodioClientTests {
         var future = geocodioClient.geocodeAsync(inputQ);
 
         var exception = assertThrows(ExecutionException.class, future::get);
-        var innerException = assertInstanceOf(RuntimeException.class, exception.getCause());
-        assertInstanceOf(IOException.class, innerException.getCause());
+        assertInstanceOf(UncheckedIOException.class, exception.getCause());
     }
 
 

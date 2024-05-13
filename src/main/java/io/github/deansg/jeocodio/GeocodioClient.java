@@ -7,6 +7,7 @@ import io.github.deansg.jeocodio.models.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -170,7 +171,7 @@ public class GeocodioClient {
             }
             return json;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
