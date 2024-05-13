@@ -38,6 +38,12 @@ public class GeocodioClientTests {
                 GeocodioClientOptionsBuilder.builder().gzip(false).build());
     }
 
+    @Test
+    public void testConstructors() {
+        geocodioClient = new GeocodioClient(randomApiKey);
+        geocodioClient = new GeocodioClient(randomApiKey, new GeocodioClientOptions(null, null));
+    }
+
     //region testGeocodeAsyncSanity
 
     @Test

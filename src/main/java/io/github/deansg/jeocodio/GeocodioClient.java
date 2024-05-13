@@ -38,17 +38,19 @@ public class GeocodioClient {
     }
 
     /**
-     * Creates a new GeocodioClient with a default {@link HttpClient} and base Geocodio URL
+     * Creates a new GeocodioClient with a default {@link HttpClient} and provided client options
      *
-     * @param apiKey The Geocodio API key
+     * @param apiKey  The Geocodio API key
+     * @param options The client options
      */
     public GeocodioClient(String apiKey, GeocodioClientOptions options) {
         this(defaultHTTPClient(), apiKey, options);
     }
 
     /**
-     * Creates a new GeocodioClient with the provided {@link HttpClient} and the default base Geocodio URL
+     * Creates a new GeocodioClient with the provided {@link HttpClient} and the default client options
      *
+     * @param httpClient The HttpClient
      * @param apiKey The Geocodio API key
      */
     public GeocodioClient(HttpClient httpClient, String apiKey) {
@@ -56,9 +58,11 @@ public class GeocodioClient {
     }
 
     /**
-     * Creates a new GeocodioClient with the provided {@link HttpClient}, default base Geocodio URL
+     * Creates a new GeocodioClient with the provided {@link HttpClient} and provided client options
      *
+     * @param httpClient The HttpClient
      * @param apiKey The Geocodio API key
+     * @param options The client options
      */
     public GeocodioClient(HttpClient httpClient, String apiKey, GeocodioClientOptions options) {
         this.httpClient = httpClient;
