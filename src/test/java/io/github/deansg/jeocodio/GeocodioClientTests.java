@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import javax.imageio.IIOException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -296,6 +297,23 @@ public class GeocodioClientTests {
     }
 
     //endregion
+
+    @Test
+    public void testIOException() throws IOException {
+        var inputQ = "1109 N Highland St. Arlington VA";
+        var badStream = mock(InputStream.class);
+        when(badStream.readAllBytes()).thenThrow(IIOException.class);
+        HttpResponse<InputStream> mockHTTPResponse = mockHttpResponse(badStream);
+        var mockFuture = CompletableFuture.completedFuture(mockHTTPResponse);
+        when(httpClient.sendAsync(any(), eq(HttpResponse.BodyHandlers.ofInputStream()))).thenReturn(mockFuture);
+
+        var future = geocodioClient.geocodeAsync(inputQ);
+
+        var exception = assertThrows(ExecutionException.class, future::get);
+        var innerException = assertInstanceOf(RuntimeException.class, exception.getCause());
+        assertInstanceOf(IOException.class, innerException.getCause());
+    }
+
 
     //region Utils
 
