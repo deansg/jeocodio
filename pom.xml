@@ -113,7 +113,7 @@
                 <configuration>
                     <excludes>
                         <exclude>io/github/deansg/jeocodio/models/*</exclude>
-                        <exclude>io/github/deansg/jeocodio/GeocodioClientOptionsBuilder</exclude>
+                        <exclude>io/github/deansg/jeocodio/GeocodioClientOptionsBuilder*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
